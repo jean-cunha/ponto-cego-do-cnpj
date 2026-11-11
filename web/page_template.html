@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CNPJ que se conserta sozinho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: uma coluna de leitura (até 760px); os três instrumentos ocupam a largura toda da coluna */
+  --paper:#E8EDEA; --paper-2:#DCE4E0; --card:#F3F6F4;
+  --ink:#10262D; --ink-2:#48606A; --rule:#B7C5C1;
+  --accent:#2B47D9;   /* anil: o que é interativo ou está selecionado */
+  --escape:#C52E1B;   /* erro que passou */
+  --fixed:#13804A;    /* erro consertado */
+  --wrong:#A86E00;    /* conserto errado */
+  --held:#74858A;     /* erro barrado, sem conserto */
+  --font-display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:"Atkinson Hyperlegible Mono",ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1517; --paper-2:#122024; --card:#15252A;
+    --ink:#E6EEEB; --ink-2:#9DB2B6; --rule:#2B4046;
+    --accent:#97A8FF; --escape:#FF6C57; --fixed:#4CCB85; --wrong:#F0B133; --held:#80939A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1517; --paper-2:#122024; --card:#15252A;
+  --ink:#E6EEEB; --ink-2:#9DB2B6; --rule:#2B4046;
+  --accent:#97A8FF; --escape:#FF6C57; --fixed:#4CCB85; --wrong:#F0B133; --held:#80939A;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0}
+h1{font-weight:800;font-size:clamp(2.7rem,12vw,5.2rem);line-height:.92;letter-spacing:-.025em}
+h2{font-weight:750;font-size:clamp(1.7rem,6.4vw,2.5rem);line-height:1.02;letter-spacing:-.015em}
+h3{font-weight:700;font-size:1.22rem;line-height:1.2;margin-top:1.9rem}
+p{margin:.75rem 0;max-width:66ch}
+a{color:var(--accent);text-underline-offset:3px}
+.mono,code,kbd{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+code{font-size:.93em;background:var(--paper-2);padding:.08em .32em;border-radius:4px}
+.eyebrow{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);margin:0}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---------- abertura ---------- */
+.hero{padding:44px 0 8px}
+.hero h1{margin:.5rem 0 1.1rem}
+.nb{white-space:nowrap}
+.fix{position:relative;display:inline-block;color:var(--fixed)}
+.fix .was{position:absolute;left:50%;top:-.36em;transform:translateX(-50%) rotate(-8deg);font-size:.4em;font-family:var(--font-mono);font-weight:700;color:var(--escape);text-decoration:line-through;text-decoration-thickness:.09em;line-height:1}
+.lede{font-size:1.14rem;line-height:1.5;max-width:60ch}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:2px solid var(--ink);border-bottom:1px solid var(--rule);margin:1.6rem 0 1rem}
+.tile{padding:14px 14px 14px 0}
+.tile + .tile{padding-left:14px;border-left:1px solid var(--rule)}
+.tile .n{font-family:var(--font-display);font-weight:800;font-size:clamp(1.35rem,5.2vw,2.05rem);line-height:1;letter-spacing:-.02em;white-space:nowrap}
+.tile .n .de{color:var(--escape)} .tile .n .para{color:var(--fixed)} .tile .n .seta{color:var(--ink-2);font-weight:500;padding:0 .12em}
+.tile p{font-size:.86rem;line-height:1.35;color:var(--ink-2);margin:.5rem 0 0}
+@media (max-width:560px){
+  .tiles{grid-template-columns:1fr}
+  .tile{padding:12px 0;display:grid;grid-template-columns:9.2rem 1fr;gap:12px;align-items:center}
+  .tile + .tile{padding-left:0;border-left:0;border-top:1px solid var(--rule)}
+  .tile p{margin:0}
+}
+.aviso{font-size:.86rem;color:var(--ink-2)}
+.tags{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--ink-2);margin:1rem 0 0;padding:0;list-style:none}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:.16em .5em;border-radius:3px;border:1.5px solid currentColor;vertical-align:.12em;white-space:nowrap}
+.tag.fato{color:var(--paper);background:var(--ink);border-color:var(--ink)}
+.tag.demo{color:var(--fixed)} .tag.hip{color:var(--wrong)} .tag.esp{color:var(--escape)}
+
+/* ---------- seções ---------- */
+section{padding-top:56px}
+.sec-n{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.09em;color:var(--ink-2);display:flex;align-items:center;gap:10px;margin:0 0 .7rem}
+.sec-n::after{content:"";flex:1;height:1px;background:var(--rule)}
+.instr{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:14px;margin:1.2rem 0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input{font:inherit;color:inherit}
+.btn{appearance:none;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:.5em 1em;font-size:.9rem;font-weight:600;cursor:pointer;min-height:42px;line-height:1}
+.btn.pri{background:var(--ink);color:var(--paper)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.sel{border:1.5px solid var(--rule);background:var(--paper);border-radius:8px;padding:.5em .6em;font-family:var(--font-body);font-size:.92rem;letter-spacing:0;text-transform:none;color:var(--ink);min-height:42px;max-width:100%;min-width:0;width:100%}
+label.ctl{display:flex;flex-direction:column;gap:3px;min-width:0;max-width:100%;font-size:.76rem;color:var(--ink-2);font-family:var(--font-mono);letter-spacing:.04em;text-transform:uppercase}
+label.chk{display:flex;align-items:center;gap:8px;font-size:.9rem;min-height:42px}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+input[type=range]{accent-color:var(--accent);width:150px;max-width:100%}
+
+/* disco */
+.disco-box{display:flex;justify-content:center}
+#disco-cv{display:block;max-width:100%;touch-action:manipulation}
+.leg-aneis{font-size:.82rem;color:var(--ink-2);margin:.2rem 0 .6rem;text-align:center;max-width:none}
+#disco-passo{font-family:var(--font-mono);font-size:.84rem;min-height:2.9em;margin:.4rem 0;color:var(--ink);max-width:none}
+.fita{display:flex;justify-content:center;gap:3px;margin:12px 0 6px;flex-wrap:nowrap}
+.fita .grp{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fita .cels{display:flex;gap:2px;align-items:center}
+.fita .leg{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);text-align:center;border-top:1px solid var(--rule);padding-top:3px}
+.fita .sep{font-family:var(--font-mono);color:var(--ink-2);align-self:flex-start;line-height:46px;font-size:clamp(.8rem,3.2vw,1.2rem);padding:0 1px}
+.cel{appearance:none;border:1.5px solid var(--rule);background:var(--paper);border-radius:6px;font-family:var(--font-mono);font-weight:700;font-size:clamp(.9rem,3.9vw,1.35rem);width:clamp(17px,5.2vw,34px);height:46px;padding:0;cursor:pointer;color:var(--ink);position:relative}
+.cel.dv{background:var(--paper-2)}
+.cel.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.cel.err{color:var(--escape);border-color:var(--escape)}
+.cel.lendo{background:var(--ink);color:var(--paper)}
+.teclado{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:10px 0}
+.teclado.dig{grid-template-columns:repeat(10,1fr)}
+.tecla{appearance:none;border:1.5px solid var(--rule);background:var(--paper);border-radius:6px;font-family:var(--font-mono);font-weight:700;font-size:1rem;height:40px;padding:0;cursor:pointer;position:relative;color:var(--ink)}
+.tecla.gemeo{border-color:var(--escape)}
+.tecla.gemeo::after{content:"";position:absolute;right:4px;top:4px;width:6px;height:6px;border-radius:50%;background:var(--escape)}
+.tecla.atual{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tecla.certa{border-color:var(--fixed);box-shadow:inset 0 0 0 1px var(--fixed)}
+.dica{font-size:.84rem;color:var(--ink-2);margin:.3rem 0;max-width:none}
+.ver{display:grid;gap:8px;margin-top:12px}
+.ver .l{display:grid;grid-template-columns:1fr;gap:4px;padding:10px 12px;border-radius:8px;background:var(--paper);border:1px solid var(--rule);border-left:5px solid var(--held)}
+.ver .l.bom{border-left-color:var(--fixed)} .ver .l.ruim{border-left-color:var(--escape)} .ver .l.meio{border-left-color:var(--wrong)}
+.ver .q{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2)}
+.ver .r{font-weight:600;font-size:.98rem;overflow-wrap:anywhere}
+.ver .x{font-size:.84rem;color:var(--ink-2);overflow-wrap:anywhere}
+
+/* bombardeio */
+.pistas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pista-t{font-family:var(--font-display);font-weight:700;font-size:clamp(.82rem,3.3vw,1.02rem);line-height:1.1;min-height:2.3em;display:flex;align-items:flex-end}
+#bomb-cv{display:block;width:100%;height:250px;border-radius:8px;background:var(--paper);border:1px solid var(--rule);margin:6px 0}
+.placar{font-size:.8rem}
+.placar .linha{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 4px;align-items:baseline;padding:4px 0;border-top:1px solid var(--rule)}
+@media (max-width:620px){.placar{font-size:.74rem}.placar .linha{grid-template-columns:minmax(0,1fr)}.placar .linha b{padding-left:13px}}
+.placar .linha b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:.86rem}
+.placar .k{display:flex;align-items:center;gap:5px;line-height:1.15}
+.pt{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
+.pt.e{background:var(--escape)} .pt.f{background:var(--fixed)} .pt.w{background:var(--wrong)} .pt.h{background:var(--held)}
+.placar .ref{font-family:var(--font-mono);font-size:.66rem;overflow-wrap:anywhere;color:var(--ink-2);padding-top:4px;border-top:1px solid var(--rule);line-height:1.3}
+#conv-cv{display:block;width:100%;height:150px;margin-top:10px}
+.cap{font-size:.82rem;color:var(--ink-2);margin:.3rem 0 0;max-width:none}
+
+/* teste */
+.alvo{font-family:var(--font-mono);font-weight:700;font-size:clamp(1.25rem,6.2vw,2rem);letter-spacing:.04em;margin:.2rem 0 .7rem;user-select:none;-webkit-user-select:none}
+#t-in{font-family:var(--font-mono);font-size:1.15rem;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);padding:.5em .6em;min-height:46px;width:100%;max-width:19ch;text-transform:uppercase;letter-spacing:.04em}
+#t-res{min-height:3em;font-size:.94rem;margin:.6rem 0}
+.t-num{display:grid;grid-template-columns:repeat(2,1fr);gap:0 18px;font-size:.88rem}
+.t-num div{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--rule);padding:5px 0}
+.t-num b{font-family:var(--font-mono)}
+@media (max-width:520px){.t-num{grid-template-columns:1fr}}
+
+/* relatório */
+.rel p,.rel li{max-width:66ch}
+.rel ul,.rel ol{padding-left:1.2rem;margin:.6rem 0}
+.rel li{margin:.45rem 0}
+.passo{display:flex;align-items:baseline;gap:10px;margin-top:2.4rem}
+.passo .k{font-family:var(--font-mono);font-size:.78rem;color:var(--paper);background:var(--ink);padding:.1em .5em;border-radius:3px;flex:none}
+.passo h3{margin:0}
+.tab-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--rule);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.84rem}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal;min-width:170px}
+thead th{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;vertical-align:bottom}
+thead tr.grp th{text-align:center;border-bottom:0;padding-bottom:0;color:var(--ink)}
+tbody tr:last-child td{border-bottom:0}
+tr.nossa td{background:color-mix(in srgb,var(--fixed) 11%,transparent);font-weight:600}
+td.e{color:var(--escape);font-weight:700} td.f{color:var(--fixed);font-weight:700} td.w{color:var(--wrong)}
+pre{font-family:var(--font-mono);font-size:.8rem;line-height:1.5;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:14px;overflow-x:auto;margin:1rem 0}
+.formula{font-family:var(--font-mono);font-size:.92rem;background:var(--card);border:1px solid var(--rule);border-left:5px solid var(--accent);border-radius:8px;padding:12px 14px;overflow-x:auto;white-space:nowrap;margin:1rem 0}
+.ataque{border-top:1px solid var(--rule);padding:14px 0 4px}
+.ataque h4{font-family:var(--font-display);font-size:1.02rem;margin:0 0 .2rem;font-weight:700}
+.ataque p{margin:.35rem 0}
+.ataque .res{font-size:.9rem;color:var(--ink-2)}
+.estado{font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:.14em .5em;border-radius:3px;margin-right:6px;white-space:nowrap}
+.estado.ok{background:var(--fixed);color:var(--paper)} .estado.no{background:var(--escape);color:var(--paper)} .estado.pa{background:var(--wrong);color:var(--paper)}
+#pareto{display:block;width:100%;height:auto;margin:.6rem 0 0}
+.fontes{font-size:.88rem;padding-left:1.2rem}
+.fontes li{margin:.4rem 0;overflow-wrap:anywhere}
+footer{margin-top:56px;padding-top:16px;border-top:2px solid var(--ink);font-size:.84rem;color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Projeto Impossível · relatório e laboratório</p>
+  <h1 aria-label="O CNPJ que se conserta sozinho">O CNPJ que se <span class="nb">c<span class="fix" aria-hidden="true"><span class="was">0</span>o</span>nserta</span> sozinho</h1>
+  <p class="lede">Desde julho de 2026 o CNPJ aceita letras. O dígito verificador oficial deixa passar 5,9% dos erros de um caractere; no CNPJ só de números passavam 0,035%. Esta página mostra uma regra de emissão que zera esse número e ainda permite desfazer o erro, sem mudar o algoritmo oficial.</p>
+  <div class="tiles">
+    <div class="tile"><div class="n"><span class="de">5,88%</span><span class="seta">→</span><span class="para">0%</span></div><p>dos erros de 1 caractere passam pelo validador sem ser percebidos</p></div>
+    <div class="tile"><div class="n"><span class="de">11,6%</span><span class="seta">→</span><span class="para">100%</span></div><p>dos erros de 1 caractere podem ser desfeitos de um único jeito</p></div>
+    <div class="tile"><div class="n">7,9 bits</div><p>é o custo: sobram 12 bilhões de raízes, 121 vezes todo o espaço numérico antigo</p></div>
+  </div>
+  <p class="aviso">Erros sorteados de modo uniforme nas 14 posições. Proposta independente: não é norma nem ferramenta da Receita Federal.</p>
+  <ul class="tags">
+    <li><span class="tag fato">Fato</span> está em fonte pública</li>
+    <li><span class="tag demo">Demonstrado</span> calculado ou provado aqui</li>
+    <li><span class="tag hip">Hipótese</span> plausível, não testada</li>
+    <li><span class="tag esp">Especulação</span> palpite</li>
+  </ul>
+</header>
+
+<!-- ============ 1 · DISCO ============ -->
+<section id="disco">
+  <p class="sec-n">01 · MECANISMO</p>
+  <h2>O disco: o que o dígito verificador enxerga</h2>
+  <p>Na regra oficial cada caractere vale o seu código ASCII menos 48. Divida esse valor por 11. O resto diz em qual dos 11 <strong>raios</strong> do disco o caractere fica. O quociente diz em qual <strong>anel</strong>, a camada. O dígito verificador soma apenas os raios. A camada nunca entra na conta.</p>
+  <p>Por isso <code>6</code>, <code>A</code>, <code>L</code> e <code>W</code> são o mesmo caractere para o validador: estão no raio 6, em anéis diferentes.</p>
+
+  <div class="instr">
+    <div class="row" style="align-items:flex-end">
+      <label class="ctl" style="flex:1 1 210px">CNPJ no disco
+        <select class="sel" id="d-preset">
+          <option value="raiz">Emitido com a regra da raiz</option>
+          <option value="rfb">Exemplo da Receita (12.ABC.345/01DE-35)</option>
+        </select>
+      </label>
+      <button class="btn" id="d-novo" type="button">Sortear outro</button>
+    </div>
+    <div class="disco-box"><canvas id="disco-cv" role="img" aria-label="Disco com 11 raios e 4 anéis. Cada um dos 36 caracteres ocupa um cruzamento de raio e anel."></canvas></div>
+    <p class="leg-aneis">Anel de dentro: dígitos. Depois A a E, F a P e, por fora, Q a Z. Os números na borda são os restos de 0 a 10.</p>
+    <p id="disco-passo" aria-live="polite"></p>
+    <div class="row">
+      <button class="btn pri" id="d-play" type="button">Animar o cálculo</button>
+      <button class="btn" id="d-reset" type="button">Reiniciar</button>
+      <label class="ctl">Velocidade
+        <select class="sel" id="d-vel"><option value="0.5">lenta</option><option value="1" selected>normal</option><option value="3">rápida</option></select>
+      </label>
+    </div>
+
+    <div class="fita" id="d-fita" aria-label="Caracteres do CNPJ"></div>
+    <p class="dica" id="d-dica">Toque em um caractere para trocá-lo e veja quem percebe.</p>
+    <div class="teclado" id="d-teclado" hidden></div>
+    <div class="row">
+      <button class="btn" id="d-desfaz" type="button" disabled>Desfazer os erros</button>
+    </div>
+    <div class="ver" id="d-ver" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ============ 2 · BOMBARDEIO ============ -->
+<section id="bombardeio">
+  <p class="sec-n">02 · SIMULAÇÃO</p>
+  <h2>Bombardeio: três regras sob o mesmo fogo</h2>
+  <p>Cada ponto é um CNPJ válido que sofreu um erro sorteado. Ele cai até a linha do validador. O que atravessa a linha é dano: um erro que ninguém percebeu, ou um conserto errado. O que sobe de volta foi consertado. O que desliza para o lado foi barrado, sem conserto.</p>
+  <p>Não há atalho: para cada erro o programa testa os 438 vizinhos a um caractere de distância e pergunta ao validador se cada um é válido.</p>
+
+  <div class="instr">
+    <div class="row">
+      <button class="btn pri" id="b-play" type="button">Iniciar</button>
+      <button class="btn" id="b-reset" type="button">Reiniciar</button>
+      <label class="ctl">Tipo de erro
+        <select class="sel" id="b-tipo">
+          <option value="sub1">1 caractere trocado</option>
+          <option value="transp">2 vizinhos invertidos</option>
+          <option value="sub2">2 caracteres trocados</option>
+        </select>
+      </label>
+      <label class="ctl">Erros por segundo
+        <input type="range" id="b-vel" min="5" max="300" value="40" step="5">
+      </label>
+    </div>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="b-estrito" checked> Regra da raiz sem dobra</label>
+      <label class="chk"><input type="checkbox" id="b-a31"> Oficial sem I, O, U, Q, F</label>
+    </div>
+    <div class="pistas" style="margin-top:10px">
+      <div class="pista-t">Numérico antigo</div>
+      <div class="pista-t">Com letras, regra em vigor</div>
+      <div class="pista-t">Com letras + regra da raiz</div>
+    </div>
+    <canvas id="bomb-cv" role="img" aria-label="Três pistas com pontos caindo até a linha do validador."></canvas>
+    <div class="pistas">
+      <div class="placar" id="pl-0"></div>
+      <div class="placar" id="pl-1"></div>
+      <div class="placar" id="pl-2"></div>
+    </div>
+    <canvas id="conv-cv" role="img" aria-label="Gráfico da fração acumulada de erros que escaparam em cada regra."></canvas>
+    <p class="cap" id="conv-cap"></p>
+  </div>
+</section>
+
+<!-- ============ 3 · TESTE ============ -->
+<section id="teste">
+  <p class="sec-n">03 · EXPERIMENTO</p>
+  <h2>Você é o experimento</h2>
+  <p>A simulação sorteia erros de modo uniforme. Gente não erra assim. Este teste mede os seus erros de verdade: digite o CNPJ mostrado, no ritmo de um cadastro normal, e confira. O que importa é saber quantos dos seus erros caem no ponto cego da regra oficial.</p>
+  <div class="instr">
+    <p class="eyebrow">Digite este CNPJ</p>
+    <p class="alvo" id="t-alvo"></p>
+    <form id="t-form" class="row" autocomplete="off">
+      <input id="t-in" name="cnpj" type="text" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="24" aria-label="Digite o CNPJ mostrado">
+      <button class="btn pri" type="submit">Conferir</button>
+      <button class="btn" type="button" id="t-zera">Zerar</button>
+    </form>
+    <div id="t-res" aria-live="polite"></div>
+    <div class="t-num" id="t-num"></div>
+  </div>
+</section>
+
+<!-- ============ 4 · RELATÓRIO ============ -->
+<section id="relatorio" class="rel">
+  <p class="sec-n">04 · RELATÓRIO</p>
+  <h2>As sete etapas, com o que ficou de pé</h2>
+
+  <div class="passo"><span class="k">1</span><h3>A limitação</h3></div>
+  <p><span class="tag fato">Fato</span> A Receita Federal passou a emitir CNPJ com letras nas 12 primeiras posições; o primeiro saiu em 31 de julho de 2026. Os dois dígitos verificadores continuam numéricos e usam o mesmo módulo 11 de antes. Cada caractere entra na conta como ASCII − 48: dígitos valem 0 a 9, letras valem 17 a 42.</p>
+  <p><span class="tag fato">Fato</span> Já foi publicado que <code>6</code> e <code>A</code> produzem os mesmos dígitos, porque 17 − 6 = 11. Não encontrei quem tenha medido o tamanho do problema, listado todos os casos ou proposto correção. Isso não prova que ninguém fez.</p>
+  <p><span class="tag demo">Demonstrado</span> Todo valor se escreve como 11 × camada + raio, e o validador só usa o raio. Os 36 símbolos caem em 11 raios. Trocar a camada de qualquer caractere, em quantas posições for, é invisível. Só para o exemplo oficial <code>12.ABC.345/01DE-35</code> existem outras 1.119.743 cadeias com os mesmos raios, e todas recebem os dígitos 35.</p>
+  <p><span class="tag demo">Demonstrado</span> Com o erro sorteado entre os outros 35 símbolos, a fração exata de trocas de um caractere que passa é 6,864% nas 12 primeiras posições. No CNPJ só de números era 0,0413%. A regra nova é 166 vezes mais permeável. Trocas de dois vizinhos: 6,953% contra 0,135%.</p>
+  <p><span class="tag demo">Demonstrado</span> Retirar as letras I, O, U, Q e F não resolve. Foi um pedido técnico do ENCAT, que a norma da Receita não adotou. Com ele a taxa subiria para 7,135%.</p>
+  <p><span class="tag hip">Hipótese</span> Algumas confusões comuns caem exatamente no ponto cego. Visuais: <code>0</code> com <code>Q</code>, <code>O</code> com <code>D</code>. Teclas vizinhas: <code>A</code> com <code>W</code>, <code>J</code> com <code>U</code>, <code>9</code> com <code>O</code>. Letras que soam parecido ao ditar: <code>E</code> com <code>P</code>, <code>D</code> com <code>Z</code>. Não tenho dados de erros reais em CNPJ com letras.</p>
+
+  <div class="passo"><span class="k">2</span><h3>A hipótese</h3></div>
+  <p>Quem emite o CNPJ é um só. Então a correção não precisa estar no algoritmo: pode estar na escolha de quais números existem.</p>
+  <ul>
+    <li><strong>H1.</strong> Existe um conjunto de raízes que a Receita poderia adotar, sem tocar no algoritmo, em que todo erro de um caractere é percebido.</li>
+    <li><strong>H2.</strong> Nesse conjunto, todo erro de um caractere pode ser localizado e desfeito de um único jeito.</li>
+  </ul>
+  <p>As duas são falseáveis. Basta achar dois CNPJs do conjunto que difiram em uma ou duas posições.</p>
+
+  <div class="passo"><span class="k">3</span><h3>A solução: regra da raiz</h3></div>
+  <p>Uma raiz nova só seria emitida se passasse em uma conta a mais, feita com os mesmos valores ASCII − 48:</p>
+  <div class="formula">T = ( 10·v₁ + 10²·v₂ + 10³·v₃ + … + 10⁸·v₈ ) mod 191 = 0</div>
+  <p>Mais três condições: a raiz nova tem pelo menos 3 letras, a ordem é numérica, e não se emite combinação cujo resto do módulo 11 seja 1. Essa última elimina a dobra, o caso em que os restos 0 e 1 viram o mesmo dígito 0.</p>
+  <p>Por que funciona. Uma troca de camada muda o valor em 11, 22 ou 33, e 191 não divide nenhum deles: T enxerga o que o módulo 11 não vê. Com pesos 10, 100, 45, 68, 107, 115, 4, 40 (as potências de 10 módulo 191), as 48 assinaturas possíveis de um erro de camada nas 8 posições são todas diferentes, então a assinatura diz onde foi e quanto foi. Para os demais erros, os dois dígitos oficiais apontam a posição, e T desfaz os empates que sobram: entre as posições 1 e 5 e entre raiz e ordem.</p>
+<pre>// regra da raiz: T precisa dar 0 (usa só os 8 primeiros caracteres)
+function tRaiz(cnpj) {
+  let t = 0;
+  for (let j = 7; j &gt;= 0; j--)
+    t = ((t + (cnpj.charCodeAt(j) - 48)) * 10) % 191;
+  return t;
+}</pre>
+  <p>Validadores antigos não mudam: todo CNPJ emitido assim continua válido para eles. Quem conhece a regra ganha a detecção e o conserto.</p>
+
+  <div class="passo"><span class="k">4</span><h3>A demonstração</h3></div>
+  <p><span class="tag demo">Demonstrado</span> Prova por varredura completa: para cada par de posições, o programa percorre todas as trocas de símbolo e confere se alguma combinação mantém as três contas zeradas. Nenhuma mantém. A distância mínima do código é pelo menos 3. Disso sai que todo erro de um caractere é desfeito de um único jeito, todo erro em duas posições é percebido e toda inversão de vizinhos é percebida.</p>
+  <p><span class="tag demo">Demonstrado</span> Medição por força bruta, 400 mil erros de um caractere e 120 mil dos outros tipos por linha. Os valores marcados com <em>exato</em> ou <em>prova</em> não dependem de sorteio.</p>
+  <div class="tab-wrap">
+  <table>
+    <thead>
+      <tr class="grp"><th></th><th colspan="2">1 caractere trocado</th><th colspan="3">2 vizinhos invertidos</th><th colspan="2">2 caracteres trocados</th></tr>
+      <tr><th>Regra</th><th>passa</th><th>conserta</th><th>passa</th><th>conserta</th><th>conserto errado</th><th>passa</th><th>conserto errado</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Numérico antigo</td><td>0,035% <small>exato</small></td><td>31,2%</td><td>0,11%</td><td>24,7%</td><td class="w">18,6%</td><td>1,01%</td><td class="w">38,8%</td></tr>
+      <tr><td>Com letras, regra em vigor</td><td class="e">5,883% <small>exato</small></td><td>11,6%</td><td class="e">5,95%</td><td>27,3%</td><td class="w">4,0%</td><td class="e">1,13%</td><td class="w">15,7%</td></tr>
+      <tr><td>Em vigor, sem I, O, U, Q, F</td><td class="e">6,116% <small>exato</small></td><td>12,0%</td><td class="e">6,23%</td><td>27,2%</td><td class="w">5,0%</td><td class="e">1,21%</td><td class="w">17,4%</td></tr>
+      <tr><td>Regra da raiz, com dobra</td><td>0,003%</td><td>97,0%</td><td>0,05%</td><td>83,2%</td><td class="w">7,2%</td><td>0,008%</td><td class="w">2,8%</td></tr>
+      <tr class="nossa"><td>Regra da raiz, sem dobra</td><td class="f">0% <small>prova</small></td><td class="f">100% <small>prova</small></td><td class="f">0% <small>prova</small></td><td>87,7%</td><td class="w">0,8%</td><td class="f">0% <small>prova</small></td><td class="w">2,1%</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><span class="tag demo">Demonstrado</span> A regra também protege os CNPJs numéricos que já existem. Com um validador que aceita letras, um dígito trocado por uma letra do mesmo raio passa. Com a regra da raiz, uma raiz com uma ou duas letras é sempre erro. No modelo uniforme, os erros que escapam em CNPJs numéricos caem de 5,90% para 0,008%.</p>
+  <p><span class="tag demo">Demonstrado</span> Quanto se ganha por bit gasto. Cada ponto é um módulo primo diferente, com os melhores pesos que encontrei. A linha de cima é sem dobra.</p>
+  <svg id="pareto" viewBox="0 0 640 300" width="100%" role="img" aria-label="Gráfico: bits de raiz gastos no eixo horizontal, erros de um caractere consertados no eixo vertical."></svg>
+  <p class="cap">Busca completa: nenhum primo abaixo de 173 dá garantia total com uma única equação deste tipo. Usei 191 porque os pesos viram potências de 10, ao custo de 0,14 bit a mais.</p>
+
+  <div class="passo"><span class="k">5</span><h3>As tentativas de destruir a proposta</h3></div>
+  <div class="passo" style="margin-top:.2rem"><span class="k">6</span><h3>e o que mudou por causa delas</h3></div>
+
+  <div class="ataque"><h4>A primeira versão exigia mudar o padrão</h4>
+    <p>Comecei trocando a tabela de valores só no segundo dígito, com v + ⌊v/11⌋ no lugar de v. Resolve no papel e mantém os CNPJs antigos válidos. Mas muda um algoritmo que já está em produção em milhares de sistemas.</p>
+    <p class="res"><span class="estado ok">Refinado</span>Abandonei a ideia e levei a correção para a emissão, onde só um ator precisa agir.</p></div>
+  <div class="ataque"><h4>Um módulo pequeno percebe, mas não localiza</h4>
+    <p>Com módulo 5 a regra percebe todo erro de camada e custa 2,3 bits, mas só conserta 78% dos erros. Entre 53 e 167, a busca completa mostra que sempre sobra confusão entre as posições 1 e 5, as únicas cujos pesos oficiais são proporcionais módulo 11.</p>
+    <p class="res"><span class="estado ok">Refinado</span>Módulo mínimo com garantia total: 173. Adotei 191.</p></div>
+  <div class="ataque"><h4>A dobra do módulo 11 sabota o conserto</h4>
+    <p>Mesmo com a regra, 3% dos erros ficavam ambíguos. A causa é antiga: restos 0 e 1 geram o mesmo dígito 0, e o decodificador não sabe qual dos dois era o certo.</p>
+    <p class="res"><span class="estado ok">Refinado</span>Não emitir combinações com resto 1. Custa 17,4% das combinações de raiz e ordem e leva o conserto de 97% para 100%. Para filiais, isso significa pular alguns números de ordem.</p></div>
+  <div class="ataque"><h4>Consertar sozinho pode piorar</h4>
+    <p>Quando há dois erros, 2,1% das vezes existe um CNPJ válido a um caractere de distância, e o decodificador proporia esse CNPJ errado. Com dois caracteres invertidos a uma casa de distância, o conserto proposto está errado em 10,7% dos casos.</p>
+    <p class="res"><span class="estado pa">Mitigado</span>O decodificador só sugere, e a pessoa confirma. O título desta página promete mais do que é prudente fazer em produção.</p></div>
+  <div class="ataque"><h4>Já existem CNPJs com letras emitidos sem a regra</h4>
+    <p>Desde 31 de julho de 2026 saem raízes sorteadas. Um validador não distingue uma raiz antiga que não segue a regra de uma raiz nova com erro.</p>
+    <p class="res"><span class="estado no">Não resolvido</span>Seria preciso uma data de corte com lista de exceções, ou tratar a falha de T como aviso e não como rejeição.</p></div>
+  <div class="ataque"><h4>Ordem com letras fica de fora</h4>
+    <p>A norma permite letras também nas quatro posições da ordem. A regra da raiz exige ordem numérica e não cobre esse caso.</p>
+    <p class="res"><span class="estado no">Não resolvido</span>A mesma técnica serve para a ordem, com outro módulo. Não projetei nem medi.</p></div>
+  <div class="ataque"><h4>O risco real pode ser pequeno</h4>
+    <p>Um CNPJ digitado errado quase nunca existe no cadastro, e a consulta online pega. O ganho fica onde não há consulta: formulário offline, leitura de documento por câmera, importação de planilha. E a taxa de 5,9% vale para erro uniforme, que não é como gente erra.</p>
+    <p class="res"><span class="estado no">Não medido</span>É o que o experimento da etapa 7 precisa responder.</p></div>
+  <div class="ataque"><h4>O custo pode não ser o menor possível</h4>
+    <p>A construção gasta 7,9 bits de raiz. Um argumento de contagem dá um piso de 1,5 bit para qualquer regra que conserte erros na raiz.</p>
+    <p class="res"><span class="estado no">Em aberto</span>Não sei o que existe entre 1,5 e 7,9.</p></div>
+  <div class="ataque"><h4>Originalidade</h4>
+    <p>Restringir um código a um subconjunto para ganhar distância é técnica de livro. O que apresento como novo é a aplicação: a medida exata do ponto cego, a regra de emissão compatível e a prova de que ela conserta. Minha busca não achou nada igual; uma busca não é prova.</p></div>
+
+  <div class="passo"><span class="k">7</span><h3>O experimento que decide</h3></div>
+  <ol>
+    <li><strong>Hoje, em cinco minutos.</strong> Abra qualquer validador de CNPJ alfanumérico e teste <code>12.ABC.345/01DE-35</code>, <code>12.LBC.345/01DE-35</code> e <code>12.6BC.345/01DE-35</code>. Minha previsão: os três são aceitos. Se algum for recusado, a etapa 1 está errada.</li>
+    <li><strong>Erros de gente.</strong> Trinta pessoas, quarenta CNPJs cada, no teste da seção 03. Mede-se a fração dos erros reais que passam na regra em vigor. Critério de derrota: abaixo de 1%, a regra da raiz não paga o custo.</li>
+    <li><strong>Exposição real.</strong> Nos dados abertos do CNPJ, contar quantos pares de CNPJs com letras já emitidos são gêmeos, isto é, têm os mesmos raios em todas as posições. Se houver pares, um erro de camada leva de uma empresa real a outra.</li>
+    <li><strong>Reprodução.</strong> Os scripts em Python refazem cada número desta página: as frações exatas, a busca do módulo mínimo e a varredura que prova a distância 3.</li>
+  </ol>
+
+  <h3>Fontes</h3>
+  <ul class="fontes">
+    <li>Receita Federal, <a href="https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/cnpj/cnpj-alfanumerico.pdf">Perguntas e respostas sobre o CNPJ alfanumérico</a>: formato, valores ASCII − 48, exemplo 12.ABC.345/01DE-35.</li>
+    <li>ENCAT, <a href="https://www.reformatributaria.com/wp-content/uploads/2025/05/CNPJ-alfanumerico.pdf">Nota Técnica Conjunta 2025.001</a> (cópia): pedido de exclusão das letras I, O, U, Q e F, condicionado a confirmação.</li>
+    <li>Barbieri Advogados, <a href="https://www.barbieriadvogados.com/cnpj-alfanumerico-2026-mudancas-regulamentares-e-impactos-empresariais/">CNPJ alfanumérico 2026</a>: início em 31/07/2026 e nenhuma letra vedada pela norma.</li>
+    <li>Bate Carimbo, <a href="https://batecarimbo.com.br/guias/modulo-11-digito-verificador">Módulo 11: como funciona o dígito verificador</a>: registro anterior de que 6 e A dão os mesmos dígitos.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>Simulações rodam no seu aparelho, com o mesmo código da regra oficial. Os valores de referência foram medidos antes, em Python, com 400 mil erros por linha.</p>
+</footer>
+</div>
+
+<script>
+/*__CORE__*/
+</script>
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const DATA = /*__DATA__*/;
+const A31 = ALFA.split("").filter(c => "IOUQF".indexOf(c) < 0).join("");
+const TAM_CLASSE = [3,3,3,3,3,3,4,4,4,4,2];
+const reduz = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const pct = (x, d) => (x * 100).toFixed(d === undefined ? 2 : d).replace(".", ",") + "%";
+
+/* ---------- cores do tema, lidas dos tokens ---------- */
+let COR = {};
+function lerCores(){
+  const cs = getComputedStyle(document.documentElement);
+  ["paper","paper-2","card","ink","ink-2","rule","accent","escape","fixed","wrong","held"].forEach(k => COR[k] = cs.getPropertyValue("--" + k).trim());
+  COR.mono = cs.getPropertyValue("--font-mono").trim();
+  COR.display = cs.getPropertyValue("--font-display").trim();
+}
+function alfa(hex, a){
+  const h = hex.replace("#","");
+  const n = parseInt(h.length === 3 ? h.split("").map(x => x + x).join("") : h, 16);
+  return "rgba(" + (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255) + "," + a + ")";
+}
+
+/* =====================================================================
+   1 · DISCO
+   ===================================================================== */
+const Disco = (function(){
+  const cv = $("#disco-cv"), ctx = cv.getContext("2d");
+  const PADRAO = "34DC0XNA000172", RFB = "12ABC34501DE35";
+  const st = { orig: PADRAO, cur: PADRAO, sel: -1, anim: null, vel: 1 };
+  let W = 0, dpr = 1, fundo = null, ultimo = 0, rafId = 0;
+
+  const ang = r => -Math.PI / 2 + r * 2 * Math.PI / 11;
+  const G = () => { const R = W * 0.44; return { cx: W / 2, cy: W / 2, R, Rd: R * 0.95, anel: k => R * (0.30 + 0.15 * k), no: Math.max(8.5, W * 0.027) }; };
+  function noXY(c){ const g = G(), a = ang(raio(c)), rr = g.anel(camada(c)); return [g.cx + rr * Math.cos(a), g.cy + rr * Math.sin(a)]; }
+
+  function passos(s){
+    const out = []; let S = 0;
+    for (let i = 0; i < 12; i++){ const r = raio(s[i]), add = (W1[i] * r) % 11; out.push({ pass:1, i, c:s[i], r, w:W1[i], add, de:S }); S = (S + add) % 11; }
+    const d1 = dobra(S); out.push({ pass:1, fim:true, resto:S, dv:d1, de:S, add:0 });
+    let S2 = 0;
+    for (let i = 0; i < 12; i++){ const r = raio(s[i]), add = (W2[i] * r) % 11; out.push({ pass:2, i, c:s[i], r, w:W2[i], add, de:S2 }); S2 = (S2 + add) % 11; }
+    const add = (2 * d1) % 11; out.push({ pass:2, i:12, c:String(d1), r:d1, w:2, add, de:S2, dv1:true }); S2 = (S2 + add) % 11;
+    out.push({ pass:2, fim:true, resto:S2, dv:dobra(S2), de:S2, add:0 });
+    return out;
+  }
+  function restos(s){ const [s1, s2] = somas(s); const d1 = dobra(s1); return { s1, s2: (s2 + 2 * d1) % 11, d1, d2: dobra((s2 + 2 * d1) % 11) }; }
+
+  function fazFundo(){
+    fundo = document.createElement("canvas"); fundo.width = cv.width; fundo.height = cv.height;
+    const c = fundo.getContext("2d"); c.scale(dpr, dpr);
+    const g = G();
+    // roseta de segurança, só na coroa externa
+    c.lineWidth = 0.6; c.strokeStyle = alfa(COR["ink-2"], 0.22);
+    for (let m = 0; m < 5; m++){
+      c.beginPath();
+      for (let t = 0; t <= 720; t++){
+        const a = t / 720 * Math.PI * 2;
+        const rr = g.R * (1.085 + 0.036 * Math.sin(22 * a + m * 1.2566) * Math.cos(11 * a * 0.5 + m));
+        const x = g.cx + rr * Math.cos(a), y = g.cy + rr * Math.sin(a);
+        if (t) c.lineTo(x, y); else c.moveTo(x, y);
+      }
+      c.stroke();
+    }
+    // anéis
+    for (let k = 0; k < 4; k++){ c.beginPath(); c.arc(g.cx, g.cy, g.anel(k), 0, Math.PI * 2); c.strokeStyle = alfa(COR.rule, 0.9); c.lineWidth = 1; c.setLineDash([2, 5]); c.stroke(); }
+    c.setLineDash([]);
+    // raios
+    for (let r = 0; r < 11; r++){
+      const a = ang(r);
+      c.beginPath(); c.moveTo(g.cx + g.R * 0.2 * Math.cos(a), g.cy + g.R * 0.2 * Math.sin(a)); c.lineTo(g.cx + g.Rd * Math.cos(a), g.cy + g.Rd * Math.sin(a));
+      c.strokeStyle = alfa(COR["ink-2"], 0.35); c.lineWidth = 1; c.stroke();
+    }
+    // mostrador dos restos
+    c.beginPath(); c.arc(g.cx, g.cy, g.Rd, 0, Math.PI * 2); c.strokeStyle = COR.ink; c.lineWidth = 1.5; c.stroke();
+    c.font = "700 " + Math.max(10, W * 0.03) + "px " + COR.mono; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = COR["ink-2"];
+    for (let r = 0; r < 11; r++){ const a = ang(r), rr = g.R * 1.085; c.save(); c.translate(g.cx + rr * Math.cos(a), g.cy + rr * Math.sin(a)); c.fillStyle = COR.paper; c.beginPath(); c.arc(0, 0, W * 0.026, 0, Math.PI * 2); c.fill(); c.fillStyle = COR["ink-2"]; c.fillText(String(r), 0, 1); c.restore(); }
+  }
+
+  function seta(x1, y1, x2, y2, cor){
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy); if (L < 2) return;
+    const g = G(), ux = dx / L, uy = dy / L, a = g.no + 2, b = L - g.no - 3;
+    ctx.strokeStyle = cor; ctx.fillStyle = cor; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(x1 + ux * a, y1 + uy * a); ctx.lineTo(x1 + ux * b, y1 + uy * b); ctx.stroke();
+    const hx = x1 + ux * b, hy = y1 + uy * b, s = 6;
+    ctx.beginPath(); ctx.moveTo(hx + ux * s, hy + uy * s); ctx.lineTo(hx - uy * s * 0.8, hy + ux * s * 0.8); ctx.lineTo(hx + uy * s * 0.8, hy - ux * s * 0.8); ctx.closePath(); ctx.fill();
+  }
+
+  function draw(){
+    if (!W) return;
+    const g = G(), s = st.cur, an = st.anim;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+    if (fundo) ctx.drawImage(fundo, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const presentes = {}; for (let i = 0; i < 12; i++) presentes[s[i]] = (presentes[s[i]] || 0) + 1;
+    const passo = an ? an.steps[an.k] : null;
+    const lendo = passo && !passo.fim ? (passo.dv1 ? null : s[passo.i]) : null;
+
+    // raio selecionado (o raio do caractere correto naquela posição)
+    if (st.sel >= 0 && st.sel < 12){
+      const a = ang(raio(st.orig[st.sel]));
+      ctx.beginPath(); ctx.moveTo(g.cx + g.anel(0) * 0.8 * Math.cos(a), g.cy + g.anel(0) * 0.8 * Math.sin(a)); ctx.lineTo(g.cx + g.Rd * Math.cos(a), g.cy + g.Rd * Math.sin(a));
+      ctx.strokeStyle = alfa(COR.accent, 0.3); ctx.lineWidth = g.no * 2.5; ctx.lineCap = "round"; ctx.stroke(); ctx.lineCap = "butt";
+    }
+    // feixe do caractere lido até o mostrador
+    if (lendo){
+      const [x, y] = noXY(lendo), a = ang(raio(lendo));
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(g.cx + g.Rd * Math.cos(a), g.cy + g.Rd * Math.sin(a));
+      ctx.strokeStyle = COR.ink; ctx.lineWidth = 2; ctx.stroke();
+    }
+    // nós
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (let k = 0; k < 36; k++){
+      const c = ALFA[k], [x, y] = noXY(c), on = !!presentes[c];
+      const selOrig = st.sel >= 0 && st.sel < 12 && st.orig[st.sel] === c;
+      const selCur = st.sel >= 0 && st.sel < 12 && s[st.sel] === c;
+      const gemeo = st.sel >= 0 && st.sel < 12 && raio(st.orig[st.sel]) === raio(c);
+      ctx.beginPath(); ctx.arc(x, y, g.no, 0, Math.PI * 2);
+      if (c === lendo){ ctx.fillStyle = COR.ink; ctx.fill(); }
+      else if (selCur){ ctx.fillStyle = COR.accent; ctx.fill(); }
+      else { ctx.fillStyle = on ? COR.card : COR.paper; ctx.fill(); }
+      ctx.lineWidth = on ? 2 : 1; ctx.strokeStyle = gemeo ? COR.accent : (on ? COR.ink : alfa(COR["ink-2"], 0.45));
+      if (selOrig && !selCur){ ctx.setLineDash([3, 3]); ctx.strokeStyle = COR.fixed; ctx.lineWidth = 2; }
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.font = (on ? "700 " : "400 ") + Math.max(10, g.no * 1.15) + "px " + COR.mono;
+      ctx.fillStyle = (c === lendo || selCur) ? COR.paper : (on ? COR.ink : alfa(COR["ink-2"], 0.8));
+      ctx.fillText(c, x, y + 1);
+      if (presentes[c] > 1){ ctx.font = "700 " + Math.max(8, g.no * 0.7) + "px " + COR.mono; ctx.fillStyle = COR["ink-2"]; ctx.fillText("×" + presentes[c], x + g.no * 1.25, y - g.no * 0.9); }
+    }
+    // setas de erro: do caractere certo para o digitado
+    for (let j = 0; j < 12; j++) if (s[j] !== st.orig[j]){
+      const [x1, y1] = noXY(st.orig[j]), [x2, y2] = noXY(s[j]);
+      seta(x1, y1, x2, y2, raio(s[j]) === raio(st.orig[j]) ? COR.escape : COR.held);
+    }
+    // ponteiros do mostrador
+    const R = restos(s);
+    let p1 = R.s1, p2 = R.s2, mostra2 = true, arco = null;
+    if (an){
+      const pas = an.steps[an.k], pos = pas.de + pas.add * Math.min(1, an.p * 1.25);
+      if (pas.pass === 1){ p1 = pos; mostra2 = false; } else { p2 = pos; }
+      if (pas.add) arco = { de: pas.de, ate: pos };
+    }
+    if (arco){ ctx.beginPath(); ctx.arc(g.cx, g.cy, g.Rd, ang(arco.de), ang(arco.ate)); ctx.strokeStyle = COR.accent; ctx.lineWidth = 5; ctx.stroke(); }
+    const ponteiro = (v, rot, cheio) => {
+      const a = ang(v), x = g.cx + g.Rd * Math.cos(a), y = g.cy + g.Rd * Math.sin(a), rr = Math.max(9, W * 0.03);
+      ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.fillStyle = cheio ? COR.ink : COR.paper; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = COR.ink; ctx.stroke();
+      ctx.font = "700 " + rr * 0.95 + "px " + COR.mono; ctx.fillStyle = cheio ? COR.paper : COR.ink; ctx.fillText(rot, x, y + 1);
+    };
+    if (mostra2 && Math.abs(p1 - p2) < 0.05){ ponteiro(p1, "1·2", true); }
+    else { ponteiro(p1, "1º", true); if (mostra2) ponteiro(p2, "2º", false); }
+    // centro: dígitos calculados
+    const okOf = validoOficial(s);
+    ctx.fillStyle = COR.paper; ctx.beginPath(); ctx.arc(g.cx, g.cy, g.R * 0.185, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = COR.ink; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = COR["ink-2"]; ctx.font = "700 " + Math.max(8, W * 0.022) + "px " + COR.mono; ctx.fillText("DV", g.cx, g.cy - g.R * 0.105);
+    let txt = "" + R.d1 + R.d2;
+    if (an){ const pas = an.steps[an.k]; txt = (pas.pass === 1 ? "·" : R.d1) + "" + ((pas.pass === 2 && pas.fim) ? R.d2 : "·"); if (pas.pass === 1 && pas.fim) txt = R.d1 + "·"; }
+    ctx.fillStyle = COR.ink; ctx.font = "800 " + W * 0.085 + "px " + COR.display; ctx.fillText(txt, g.cx, g.cy + g.R * 0.03);
+  }
+
+  function textoPasso(){
+    const el = $("#disco-passo"), an = st.anim;
+    if (!an){
+      const R = restos(st.cur);
+      el.textContent = "Resto do 1º dígito: " + R.s1 + " → " + R.d1 + ".  Resto do 2º: " + R.s2 + " → " + R.d2 + ".  T da raiz: " + tRaiz(st.cur) + ".";
+      return;
+    }
+    const p = an.steps[an.k], n = p.pass === 1 ? "1º dígito" : "2º dígito";
+    if (p.fim){ el.textContent = n + ": resto " + p.resto + " → " + (p.resto < 2 ? "dígito 0 (restos 0 e 1 viram 0)" : "dígito 11 − " + p.resto + " = " + p.dv) + "."; return; }
+    if (p.dv1){ el.textContent = n + " · o 1º dígito (" + p.c + ") entra com peso 2 → ponteiro anda " + p.add + "."; return; }
+    el.textContent = n + " · posição " + (p.i + 1) + ": " + p.c + " vale " + val(p.c) + ", raio " + p.r + " × peso " + p.w + " = " + (p.r * p.w) + " → ponteiro anda " + p.add + ".";
+  }
+
+  function fita(){
+    const el = $("#d-fita"); el.textContent = "";
+    const an = st.anim, pas = an ? an.steps[an.k] : null;
+    const grupos = [["raiz", 0, 8], ["ordem", 8, 12], ["DV", 12, 14]];
+    grupos.forEach((gr, gi) => {
+      if (gi === 1) el.appendChild(sep("/"));
+      if (gi === 2) el.appendChild(sep("-"));
+      const box = document.createElement("div"); box.className = "grp";
+      const cels = document.createElement("div"); cels.className = "cels";
+      for (let j = gr[1]; j < gr[2]; j++){
+        if (j === 2 || j === 5) cels.appendChild(sep("."));
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "cel" + (j >= 12 ? " dv" : "") + (j === st.sel ? " sel" : "") + (st.cur[j] !== st.orig[j] ? " err" : "") + (pas && !pas.fim && pas.i === j ? " lendo" : "");
+        b.textContent = st.cur[j]; b.setAttribute("aria-label", "Posição " + (j + 1) + ": " + st.cur[j]);
+        b.addEventListener("click", () => { st.sel = st.sel === j ? -1 : j; parar(); tudo(); });
+        cels.appendChild(b);
+      }
+      const leg = document.createElement("div"); leg.className = "leg"; leg.textContent = gr[0];
+      box.appendChild(cels); box.appendChild(leg); el.appendChild(box);
+    });
+  }
+  function sep(t){ const s = document.createElement("span"); s.className = "sep"; s.textContent = t; return s; }
+
+  function teclado(){
+    const el = $("#d-teclado"), dica = $("#d-dica");
+    if (st.sel < 0){ el.hidden = true; dica.textContent = "Toque em um caractere para trocá-lo e veja quem percebe."; return; }
+    el.hidden = false; el.textContent = "";
+    const j = st.sel, pool = j < 12 ? ALFA : DIG; el.className = "teclado" + (j < 12 ? "" : " dig");
+    for (const c of pool){
+      const b = document.createElement("button"); b.type = "button";
+      const g = j < 12 && c !== st.orig[j] && raio(c) === raio(st.orig[j]);
+      b.className = "tecla" + (g ? " gemeo" : "") + (c === st.cur[j] ? " atual" : "") + (c === st.orig[j] ? " certa" : "");
+      b.textContent = c; b.addEventListener("click", () => { st.cur = st.cur.slice(0, j) + c + st.cur.slice(j + 1); tudo(); });
+      el.appendChild(b);
+    }
+    dica.textContent = j < 12 ? "Posição " + (j + 1) + ". As teclas com ponto vermelho ficam no mesmo raio do caractere certo (" + st.orig[j] + "): a regra oficial não vê a troca." : "Posição " + (j + 1) + ", dígito verificador. Qualquer troca aqui é percebida.";
+  }
+
+  function linha(cls, q, r, x){ return '<div class="l ' + cls + '"><div class="q">' + q + '</div><div class="r">' + r + '</div>' + (x ? '<div class="x">' + x + '</div>' : '') + '</div>'; }
+  function veredito(){
+    const s = st.cur, o = st.orig, mudou = s !== o, el = $("#d-ver");
+    const nerr = s.split("").filter((c, i) => c !== o[i]).length;
+    let h = "";
+    const of = validoOficial(s);
+    if (!mudou) h += linha("bom", "Regra em vigor", "Válido", "Nenhum erro inserido.");
+    else if (of) h += linha("ruim", "Regra em vigor", "Válido: o erro não foi percebido", "Os dois dígitos verificadores continuam batendo.");
+    else h += linha("", "Regra em vigor", "Inválido: erro percebido", "Sem pista de onde está o erro.");
+    const noCodigo = validoRaizMais(o, true);
+    if (!noCodigo){
+      let g = 1; for (let i = 0; i < 12; i++) g *= TAM_CLASSE[raio(o[i])];
+      h += linha("meio", "Regra da raiz", "Este CNPJ não segue a regra", "T = " + tRaiz(o) + (nLetras(o, 8, 12) ? " e a ordem tem letras" : "") + ". Outras " + (g - 1).toLocaleString("pt-BR") + " cadeias têm os mesmos raios e recebem os mesmos dígitos da regra em vigor.");
+    } else if (!mudou){
+      h += linha("bom", "Regra da raiz", "Válido", "T = 0, raiz com " + nLetras(o, 0, 8) + " letras, ordem numérica, sem resto 1.");
+    } else if (validoRaizMais(s, true)){
+      h += linha("ruim", "Regra da raiz", "Válido: o erro não foi percebido", "Isso só acontece com 3 ou mais erros.");
+    } else {
+      const d = decodificar(s, x => validoRaizMais(x, true), ALFA), c = d.cand;
+      const t = tRaiz(s);
+      const pista = "T = " + t + (t ? " (devia ser 0)" : "") + ".";
+      if (c.length === 1){
+        const z = c[0], certo = z.z === o;
+        const como = z.troca ? "inverter as posições " + (z.pos + 1) + " e " + (z.pos + 2) : "posição " + (z.pos + 1) + ": " + z.de + " → " + z.para;
+        h += linha(certo ? "bom" : "meio", "Regra da raiz", "Inválido. Conserto proposto: " + mascara(z.z), como + ". " + pista + (certo ? " É o CNPJ original." : " Este conserto está errado: você inseriu " + nerr + " erros e existe outro CNPJ válido mais perto."));
+      } else if (c.length === 0){
+        h += linha("", "Regra da raiz", "Inválido: erro percebido, sem conserto", pista + " Nenhum CNPJ válido a um caractere ou a uma inversão de distância.");
+      } else {
+        h += linha("", "Regra da raiz", "Inválido: " + c.length + " consertos possíveis", pista + " O decodificador não escolhe.");
+      }
+    }
+    el.innerHTML = h;
+    $("#d-desfaz").disabled = !mudou;
+  }
+
+  function tudo(){ fita(); teclado(); veredito(); textoPasso(); draw(); }
+  function parar(){ st.anim = null; cancelAnimationFrame(rafId); $("#d-play").textContent = "Animar o cálculo"; }
+  function quadro(t){
+    const an = st.anim; if (!an || !an.playing) return;
+    const dt = Math.min(64, t - ultimo); ultimo = t;
+    const dur = (an.steps[an.k].fim ? 1100 : 520) / st.vel;
+    an.p += dt / dur;
+    if (an.p >= 1){ an.p = 0; an.k++; if (an.k >= an.steps.length){ parar(); tudo(); return; } fita(); textoPasso(); }
+    draw(); rafId = requestAnimationFrame(quadro);
+  }
+  function tocar(){
+    if (st.anim && st.anim.playing){ st.anim.playing = false; $("#d-play").textContent = "Continuar"; return; }
+    if (!st.anim) st.anim = { steps: passos(st.cur), k: 0, p: 0, playing: true }; else st.anim.playing = true;
+    st.sel = -1; $("#d-play").textContent = "Pausar"; fita(); teclado(); textoPasso();
+    ultimo = performance.now(); rafId = requestAnimationFrame(quadro);
+  }
+  function resize(){
+    const w = Math.floor(Math.min(cv.parentElement.clientWidth, 540)); if (!w) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2.5); W = w;
+    cv.style.width = w + "px"; cv.style.height = w + "px"; cv.width = Math.round(w * dpr); cv.height = Math.round(w * dpr);
+    fazFundo(); draw();
+  }
+  function carregar(s){ parar(); st.orig = s; st.cur = s; st.sel = -1; tudo(); }
+
+  $("#d-play").addEventListener("click", tocar);
+  $("#d-reset").addEventListener("click", () => { parar(); st.sel = -1; tudo(); });
+  $("#d-vel").addEventListener("change", e => { st.vel = +e.target.value; });
+  $("#d-desfaz").addEventListener("click", () => { st.cur = st.orig; tudo(); });
+  $("#d-preset").addEventListener("change", e => carregar(e.target.value === "rfb" ? RFB : PADRAO));
+  $("#d-novo").addEventListener("click", () => { $("#d-preset").value = "raiz"; carregar(gerar("raiz+", ALFA, true)); });
+  return { resize, tudo, tocar, recolorir: () => { fazFundo(); draw(); } };
+})();
+
+/* =====================================================================
+   2 · BOMBARDEIO
+   ===================================================================== */
+const Bomb = (function(){
+  const cv = $("#bomb-cv"), ctx = cv.getContext("2d"), cc = $("#conv-cv"), cx2 = cc.getContext("2d");
+  const pistas = [{ id: "legado" }, { id: "oficial" }, { id: "raiz+" }];
+  const cfg = { tipo: "sub1", a31: false, estrito: true, vel: 40 };
+  let rodando = false, acum = 0, ultimo = 0, parts = [], hist = [], W = 0, H = 250, dpr = 1, raf = 0, ultPlacar = 0;
+  const LINHA = 0.5;
+
+  function zera(){ pistas.forEach(p => p.c = { n: 0, escapou: 0, consertado: 0, errado: 0, barrado: 0 }); parts = []; hist = []; }
+  function validadorDe(p){ return p.id === "legado" ? validoLegado : p.id === "oficial" ? validoOficial : (s => validoRaizMais(s, cfg.estrito)); }
+  function evento(visual){
+    for (let k = 0; k < 3; k++){
+      const p = pistas[k], al = p.id === "oficial" && cfg.a31 ? A31 : ALFA, dig = p.id === "legado" ? DIG : al, v = validadorDe(p);
+      let out = "igual", t = 0;
+      while (out === "igual" && t++ < 6){ const cw = gerar(p.id, al, cfg.estrito); out = julgar(cw, errar(cw, cfg.tipo, dig), v, dig); }
+      if (out === "igual") continue;
+      p.c.n++; p.c[out]++;
+      if (visual && parts.length < 260){ const lw = W / 3; parts.push({ k, x: lw * k + lw * (0.2 + 0.6 * Math.random()), y: -4, out, fase: 0, vx: 0, vy: 150 + 60 * Math.random(), a: 1 }); }
+    }
+    const n = pistas[1].c.n;
+    if (n && (n < 60 || n % Math.ceil(n / 160) === 0)) hist.push({ n, v: pistas.map(p => p.c.n ? p.c.escapou / p.c.n : 0) });
+    if (hist.length > 400) hist = hist.filter((_, i) => i % 2 === 0);
+  }
+  function ref(k){
+    const r = DATA.ref[cfg.tipo];
+    if (k === 0) return r.legado;
+    if (k === 1) return cfg.a31 ? r.oficial31 : r.oficial;
+    return cfg.estrito ? r.raizE : r.raiz;
+  }
+  function placar(){
+    for (let k = 0; k < 3; k++){
+      const c = pistas[k].c, n = c.n || 1, r = ref(k);
+      const li = (cls, nome, v, d) => '<div class="linha"><span class="k"><span class="pt ' + cls + '"></span>' + nome + '</span><b>' + pct(v / n, d) + '</b></div>';
+      $("#pl-" + k).innerHTML = li("e", "passaram", c.escapou, 2) + li("w", "conserto errado", c.errado, 2) + li("f", "consertados", c.consertado, 1) + li("h", "barrados", c.barrado, 1)
+        + '<div class="ref">' + c.n.toLocaleString("pt-BR") + ' erros<br>referência: ' + r.nd + ' passam</div>';
+    }
+  }
+  function desenha(dt){
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const lw = W / 3, yl = H * LINHA;
+    ctx.fillStyle = alfa(COR.escape, 0.07); ctx.fillRect(0, yl, W, H - yl);
+    for (let k = 1; k < 3; k++){ ctx.beginPath(); ctx.moveTo(lw * k, 0); ctx.lineTo(lw * k, H); ctx.strokeStyle = COR.rule; ctx.lineWidth = 1; ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(W, yl); ctx.strokeStyle = COR.ink; ctx.lineWidth = 2; ctx.setLineDash([7, 4]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.font = "700 10px " + COR.mono; ctx.fillStyle = COR["ink-2"]; ctx.textBaseline = "bottom"; ctx.textAlign = "left";
+    ctx.fillText("VALIDADOR", 6, yl - 4); ctx.textBaseline = "top"; ctx.fillStyle = COR.escape; ctx.fillText("DANO", 6, yl + 5);
+    const cor = { escapou: COR.escape, errado: COR.wrong, consertado: COR.fixed, barrado: COR.held };
+    const s = dt / 1000;
+    for (const p of parts){
+      if (p.fase === 0){ p.y += p.vy * s; if (p.y >= yl){ p.y = yl; p.fase = 1; if (p.out === "consertado"){ p.vy = -150; } else if (p.out === "barrado"){ p.vy = 0; p.vx = (Math.random() < 0.5 ? -1 : 1) * 80; } } }
+      else { p.y += p.vy * s; p.x += p.vx * s; if (p.out === "barrado") p.a -= s * 1.5; else if (p.out === "consertado"){ if (p.y < 20) p.a -= s * 4; } else if (p.y > H - 24) p.a -= s * 3; }
+      const lx = lw * p.k; if (p.x < lx + 4) p.x = lx + 4; if (p.x > lx + lw - 4) p.x = lx + lw - 4;
+      ctx.globalAlpha = Math.max(0, p.a);
+      ctx.fillStyle = p.fase === 0 ? COR.ink : cor[p.out];
+      const r = p.fase && (p.out === "escapou" || p.out === "errado") ? 4.2 : 3;
+      ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    parts = parts.filter(p => p.a > 0 && p.y < H + 6 && p.y > -10);
+  }
+  function grafico(){
+    const w = cc.clientWidth, h = 150; if (!w) return;
+    cx2.setTransform(dpr, 0, 0, dpr, 0, 0); cx2.clearRect(0, 0, w, h);
+    const L = 40, Rm = 8, T = 10, B = 22, nmax = Math.max(100, pistas[1].c.n);
+    const r1 = parseFloat(ref(1).nd.replace(",", ".")) / 100;
+    const ymax = Math.max(0.02, r1 * 1.6);
+    const X = n => L + (w - L - Rm) * n / nmax, Y = v => T + (h - T - B) * (1 - Math.min(v, ymax) / ymax);
+    cx2.font = "10px " + COR.mono; cx2.fillStyle = COR["ink-2"]; cx2.strokeStyle = COR.rule; cx2.lineWidth = 1; cx2.textAlign = "right"; cx2.textBaseline = "middle";
+    for (let i = 0; i <= 4; i++){ const v = ymax * i / 4; cx2.beginPath(); cx2.moveTo(L, Y(v)); cx2.lineTo(w - Rm, Y(v)); cx2.stroke(); cx2.fillText((v * 100).toFixed(1).replace(".", ",") + "%", L - 5, Y(v)); }
+    cx2.textAlign = "center"; cx2.textBaseline = "top"; cx2.fillText("0", L, h - B + 5); cx2.fillText(nmax.toLocaleString("pt-BR") + " erros", w - Rm - 34, h - B + 5);
+    cx2.setLineDash([5, 4]); cx2.strokeStyle = COR.escape; cx2.beginPath(); cx2.moveTo(L, Y(r1)); cx2.lineTo(w - Rm, Y(r1)); cx2.stroke(); cx2.setLineDash([]);
+    { const rot = "referência " + ref(1).nd, tw = cx2.measureText(rot).width; cx2.fillStyle = COR.card; cx2.fillRect(L + 6, Y(r1) + 4, tw + 8, 15); cx2.textAlign = "left"; cx2.textBaseline = "top"; cx2.fillStyle = COR.escape; cx2.fillText(rot, L + 10, Y(r1) + 7); }
+    const cores = [COR.held, COR.escape, COR.fixed];
+    for (let k = 0; k < 3; k++){
+      if (!hist.length) break;
+      cx2.beginPath(); hist.forEach((p, i) => { const x = X(p.n), y = Y(p.v[k]); if (i) cx2.lineTo(x, y); else cx2.moveTo(x, y); });
+      cx2.strokeStyle = cores[k]; cx2.lineWidth = k === 1 ? 2.5 : 2; cx2.stroke();
+      const u = hist[hist.length - 1]; cx2.beginPath(); cx2.arc(X(u.n), Y(u.v[k]), 3.5, 0, Math.PI * 2); cx2.fillStyle = cores[k]; cx2.fill();
+    }
+    $("#conv-cap").textContent = "Fração acumulada de erros que passaram. Vermelho: regra em vigor. Verde: regra da raiz. Cinza: numérico antigo. A linha tracejada é o valor medido antes, em Python.";
+  }
+  function quadro(t){
+    const dt = Math.min(80, t - ultimo); ultimo = t;
+    if (rodando){
+      acum += cfg.vel * dt / 1000; let n = Math.floor(acum); acum -= n; n = Math.min(n, 30);
+      const vis = Math.max(1, Math.round(n / 3));
+      for (let i = 0; i < n; i++) evento(!reduz && i % vis === 0);
+    }
+    desenha(dt);
+    if (t - ultPlacar > 200){ placar(); grafico(); ultPlacar = t; }
+    if (rodando || parts.length) raf = requestAnimationFrame(quadro); else { placar(); grafico(); }
+  }
+  function liga(v){
+    rodando = v; $("#b-play").textContent = v ? "Pausar" : "Continuar";
+    if (v){ ultimo = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(quadro); }
+  }
+  function reinicia(aquece){
+    liga(false); $("#b-play").textContent = "Iniciar"; zera();
+    let falta = aquece ? 900 : 0;
+    (function lote(){
+      const n = Math.min(60, falta); for (let i = 0; i < n; i++) evento(false); falta -= n;
+      placar(); grafico(); desenha(0);
+      if (falta > 0 && !rodando) setTimeout(lote, 0);
+    })();
+  }
+  function resize(){
+    const w = cv.clientWidth; if (!w) return; dpr = Math.min(window.devicePixelRatio || 1, 2.5); W = w;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr);
+    cc.width = Math.round(cc.clientWidth * dpr); cc.height = Math.round(150 * dpr);
+    desenha(0); grafico();
+  }
+  $("#b-play").addEventListener("click", () => liga(!rodando));
+  $("#b-reset").addEventListener("click", () => reinicia(false));
+  $("#b-tipo").addEventListener("change", e => { cfg.tipo = e.target.value; reinicia(true); });
+  $("#b-vel").addEventListener("input", e => { cfg.vel = +e.target.value; });
+  $("#b-estrito").addEventListener("change", e => { cfg.estrito = e.target.checked; reinicia(true); });
+  $("#b-a31").addEventListener("change", e => { cfg.a31 = e.target.checked; reinicia(true); });
+  zera();
+  return { resize, reinicia, recolorir: () => { desenha(0); grafico(); } };
+})();
+
+/* =====================================================================
+   3 · TESTE DE DIGITAÇÃO
+   ===================================================================== */
+(function(){
+  const CH = "cnpj-raiz-teste-v1";
+  let alvo = "", n = { tent: 0, erros: 0, passouOficial: 0, passouRaiz: 0, consertados: 0, consertoErrado: 0 };
+  try { const g = JSON.parse(localStorage.getItem(CH) || "null"); if (g && typeof g.tent === "number") n = Object.assign(n, g); } catch (e) {}
+  const salva = () => { try { localStorage.setItem(CH, JSON.stringify(n)); } catch (e) {} };
+  function novo(){ alvo = gerar("raiz+", ALFA, true); $("#t-alvo").textContent = mascara(alvo); }
+  function numeros(){
+    const l = (a, b) => "<div><span>" + a + "</span><b>" + b + "</b></div>";
+    const f = x => n.erros ? x + " (" + pct(x / n.erros, 0) + ")" : String(x);
+    $("#t-num").innerHTML = l("CNPJs digitados", n.tent) + l("com erro", n.erros) + l("erros que a regra em vigor aceitou", f(n.passouOficial)) + l("erros que a regra da raiz aceitou", f(n.passouRaiz)) + l("erros consertados pela regra da raiz", f(n.consertados)) + l("consertos errados", f(n.consertoErrado));
+  }
+  $("#t-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const d = $("#t-in").value.toUpperCase().replace(/[^0-9A-Z]/g, ""); if (!d) return;
+    n.tent++; let msg;
+    if (d === alvo) msg = "Correto.";
+    else {
+      n.erros++;
+      if (d.length !== 14) msg = "Erro: você digitou " + d.length + " caracteres, não 14. Qualquer validador percebe.";
+      else {
+        const of = validoOficial(d), rz = validoRaizMais(d, true); if (of) n.passouOficial++; if (rz) n.passouRaiz++;
+        const dif = []; for (let i = 0; i < 14; i++) if (d[i] !== alvo[i]) dif.push((i + 1) + ": " + alvo[i] + " → " + d[i]);
+        msg = "Erro em " + dif.length + " posição" + (dif.length > 1 ? "ões" : "") + " (" + dif.join("; ") + "). Regra em vigor: " + (of ? "aceitou o erro" : "recusou") + ". ";
+        if (rz) msg += "Regra da raiz: aceitou o erro.";
+        else { const c = decodificar(d, x => validoRaizMais(x, true), ALFA).cand;
+          if (c.length === 1 && c[0].z === alvo){ n.consertados++; msg += "Regra da raiz: recusou e propôs o conserto certo."; }
+          else if (c.length === 1){ n.consertoErrado++; msg += "Regra da raiz: recusou, mas propôs um conserto errado."; }
+          else msg += "Regra da raiz: recusou, sem conserto único."; }
+      }
+    }
+    $("#t-res").textContent = msg; $("#t-in").value = ""; salva(); numeros(); novo();
+  });
+  $("#t-zera").addEventListener("click", () => { n = { tent: 0, erros: 0, passouOficial: 0, passouRaiz: 0, consertados: 0, consertoErrado: 0 }; salva(); numeros(); $("#t-res").textContent = ""; });
+  novo(); numeros();
+})();
+
+/* =====================================================================
+   4 · GRÁFICO DE CUSTO × CONSERTO
+   ===================================================================== */
+function pareto(){
+  const svg = $("#pareto"), P = DATA.pareto, NS = "http://www.w3.org/2000/svg";
+  const w = Math.max(300, Math.round(svg.getBoundingClientRect().width || 640)), h = w < 480 ? 250 : 300;
+  svg.setAttribute("viewBox", "0 0 " + w + " " + h); svg.textContent = "";
+  const L = 44, R = 14, T = 14, B = 40, x0 = 2, x1 = 8, y0 = 65, y1 = 100;
+  const X = b => L + (w - L - R) * (b - x0) / (x1 - x0), Y = v => T + (h - T - B) * (1 - (v - y0) / (y1 - y0));
+  const el = (n, a, t) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (t !== undefined) e.textContent = t; svg.appendChild(e); return e; };
+  const fm = "font-family:var(--font-mono);font-size:11px;fill:var(--ink-2)";
+  const fd = c => "font-family:var(--font-display);font-weight:700;font-size:13px;fill:" + c;
+  for (let v = 70; v <= 100; v += 10){ el("line", { x1: L, x2: w - R, y1: Y(v), y2: Y(v), stroke: "var(--rule)" }); el("text", { x: L - 6, y: Y(v) + 4, "text-anchor": "end", style: fm }, v + "%"); }
+  for (let b = 2; b <= 8; b++){ el("line", { x1: X(b), x2: X(b), y1: h - B, y2: h - B + 5, stroke: "var(--ink-2)" }); el("text", { x: X(b), y: h - B + 18, "text-anchor": "middle", style: fm }, b); }
+  el("text", { x: (L + w - R) / 2, y: h - 5, "text-anchor": "middle", style: fm }, "bits de raiz gastos (log₂ do módulo)");
+  const serie = (key, cor) => {
+    const pts = P.map(p => [X(Math.log2(p.p)), Y(p[key])]);
+    el("polyline", { points: pts.map(q => q.join(",")).join(" "), fill: "none", stroke: cor, "stroke-width": 2.5, "stroke-linejoin": "round" });
+    pts.forEach((q, i) => el("circle", { cx: q[0], cy: q[1], r: P[i].p === 191 ? 6 : 3.5, fill: cor }));
+  };
+  serie("dobra", "var(--held)"); serie("estrito", "var(--fixed)");
+  const u = P[P.length - 1], a = P[0];
+  el("text", { x: w - R, y: Y(86), "text-anchor": "end", style: fd("var(--fixed)") }, "sem dobra: " + String(u.estrito).replace(".", ",").replace(",0", "") + "% no módulo 191");
+  el("text", { x: w - R, y: Y(86) + 18, "text-anchor": "end", style: fd("var(--held)") }, "com dobra: " + String(u.dobra).replace(".", ",") + "%");
+  el("text", { x: X(Math.log2(a.p)) + 9, y: Y(a.dobra) + 14, style: fm }, "módulo " + a.p);
+  el("text", { x: L + 6, y: Y(95) + 4, style: fm }, "erros de 1 caractere consertados");
+}
+
+/* ---------- partida ---------- */
+function tudoDeNovo(){ lerCores(); Disco.recolorir(); Bomb.recolorir(); }
+lerCores(); pareto();
+Disco.resize(); Disco.tudo(); Bomb.resize(); Bomb.reinicia(true);
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { Disco.resize(); Bomb.resize(); pareto(); }, 120); });
+new MutationObserver(tudoDeNovo).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+if (window.matchMedia) { const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", tudoDeNovo); }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { Disco.recolorir(); Bomb.recolorir(); });
+if (!reduz) setTimeout(() => Disco.tocar(), 900);
+})();
+</script>
+</body>
+</html>
