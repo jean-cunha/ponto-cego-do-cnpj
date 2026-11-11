@@ -2,7 +2,7 @@
 
 O dígito verificador (DV) do CNPJ alfanumérico, em vigor desde 31/07/2026, deixa passar **5,9%** das trocas de um único caractere. No CNPJ numérico antigo eram **0,035%**. Este repositório mede esse ponto cego com contas exatas e propõe uma **regra de emissão** que o elimina sem alterar o algoritmo do DV.
 
-**Página interativa:** https://jean-cunha.github.io/ponto-cego-do-cnpj/ (requer GitHub Pages ativo em `docs/`)
+**Página interativa:** https://jean-cunha.github.io/ponto-cego-do-cnpj/ · **Quer entender a conta?** Veja [`ESTUDO.md`](ESTUDO.md).
 
 ## Problema em 3 linhas
 
@@ -93,7 +93,7 @@ pesquisa/            experimentos (numpy) e resultados/ em JSON
 
 ## Autoria
 
-A análise matemática, o código e a página foram feitos com o **Claude** (Anthropic) e **validados por Rosario**, que reproduziu a saída do script em máquina própria (Ubuntu) e confirmou a falha em validador externo. A biblioteca Java com testes JUnit (parte autoral de Rosario) ainda não existe e será adicionada depois.
+Projeto de estudo de Rosario, desenvolvido **com assistência do Claude** (Anthropic), que fez a análise matemática e escreveu o código e a página. Rosario revisou, reproduziu a saída do script em máquina própria (Ubuntu) e confirmou a falha em validador externo. O [`ESTUDO.md`](ESTUDO.md) documenta o raciocínio e como verificá-lo. A biblioteca Java com testes JUnit (parte autoral de Rosario) ainda será adicionada.
 
 ## Licença
 
